@@ -1,0 +1,15 @@
+[Unit]
+Description=C++ Deployment on Linux
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=cpp_deploy
+Restart=on-failure
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

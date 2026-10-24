@@ -9,6 +9,9 @@
 #include <unistd.h>
 #include <csignal>
 
+#include "core/core.h"
+#include "config.h"
+
 
 
 bool g_running = true;
@@ -26,10 +29,15 @@ int main() {
   std::signal(SIGTERM, handle_signal);
   std::signal(SIGINT, handle_signal);
 
+  CD::Core core;
+  core.onStart();
+
   while (g_running) {
-    
-    sleep(5);
+    core.onUpdate();
+    sleep(CD::Config::UPDATE_TIME);
   };
+
+  core.onEnd();
 
   return 0;
 };

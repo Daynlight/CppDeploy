@@ -90,9 +90,8 @@ void CD::Core::parseServiceFile(const std::filesystem::path& path){
   
   fmt::println(fg(fmt::color::pink), "File {}\n {}", path.string(), fileContent);
   
-  CD::Service service;
-  service.loadFromFile(fileContent);
-  services[path] = (std::move(service));
+  auto [it, inserted] = services.try_emplace(path); 
+  it->second.loadFromFile(fileContent);
 };
 
 

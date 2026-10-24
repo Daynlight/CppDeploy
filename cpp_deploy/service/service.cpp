@@ -93,13 +93,13 @@ CD::Service& CD::Service::operator=(CD::Service&& second){
 // === Loop
 void CD::Service::onStart(){
   fmt::println(fg(fmt::color::blue), "CD::Service::onStart called");
+  printInfo();
 };
 
 
 
 void CD::Service::onUpdate(){
   fmt::println(fg(fmt::color::blue), "CD::Service::onUpdate called");
-  printInfo();
 };
 
 

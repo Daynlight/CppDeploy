@@ -1,0 +1,9 @@
+NAME = Software;
+DESCRIPTION = Software Project UwU;
+LOCAL_PATH = /home/daynlight/Data/Projects/Tools/CppDeploy/config/proj/A/;
+REPO_URL = https://github.com/Daynlight/Software;
+PROD_BRANCH = main;
+STAGE_BRANCH = dev;
+DOCKER_RUN_CMD = docker compose -f docker-compose-prod.yaml up -d;
+PROD_ENV_PATH = /home/daynlight/Data/Projects/Tools/CppDeploy/config/env/A.prod.env;
+STAGE_ENV_PATH = /home/daynlight/Data/Projects/Tools/CppDeploy/config/env/A.stage.env;

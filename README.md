@@ -16,10 +16,10 @@
 vcpkg install --x-install-root=./vendor
 ```
 ```bash
-cmake -S . -B build -G Ninja && cmake --build build/ && build/cpp_deploy/cpp_deploy 
+cmake -S . -B build -G Ninja && cmake --build build/ && sudo build/cpp_deploy/cpp_deploy 
 ```
 ```bash
-cmake -S . -B build -G Ninja && cmake --build build && sudo cmake --install build
+cmake -S . -B build -G Ninja && cmake --build build/ && sudo cmake --install build
 ```
 ```bash
 sudo systemctl daemon-reload

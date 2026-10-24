@@ -76,24 +76,6 @@ void CD::Core::onEnd(){
 
 
 // === Helpers
-void CD::Core::parseServiceFile(const std::filesystem::path& path){
-  std::ifstream file(path);
-  
-  if (!file.is_open()) {
-    fmt::println(fg(fmt::color::red), "Can't open file: {}", path.string());
-    return;
-  };
-
-  std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  fileContent.erase(std::remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
-  fileContent.erase(std::remove(fileContent.begin(), fileContent.end(), '\r'), fileContent.end());
-   
-  auto [it, inserted] = services.try_emplace(path); 
-  it->second.loadFromFile(fileContent);
-};
-
-
-
 void CD::Core::loadServices(){
   std::filesystem::path serviceDir = CD::Config::CONFIG_FILES_PATH;
   
@@ -112,7 +94,10 @@ void CD::Core::loadServices(){
     if (std::regex_search(filename, CD::Config::SERVICE_EXCLUDE_PATTERN)) continue;
     if (!std::regex_search(filename, CD::Config::SERVICE_INCLUDE_PATTERN)) continue;
     if (services.contains(entry.path())) continue;
-    if (entry.is_regular_file()) parseServiceFile(entry.path());
+    if (entry.is_regular_file()) {
+      auto [it, inserted] = services.try_emplace(entry.path()); 
+      it->second.parseServiceFile(entry.path());
+    };
   };
 };
 

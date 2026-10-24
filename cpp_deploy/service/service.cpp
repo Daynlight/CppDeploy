@@ -23,21 +23,22 @@ CD::Service::~Service(){
 
 
 CD::Service::Service(const CD::Service& second)
-  : name(second.name),
+  : config_path(second.config_path),
+    last_time_write(second.last_time_write),
+    name(second.name),
     description(second.description),
     local_path(second.local_path),
+    env_path(second.env_path),
     repo_url(second.repo_url),
-    prod_branch(second.prod_branch),
-    stage_branch(second.stage_branch),
-    docker_run_cmd(second.docker_run_cmd),
-    docker_stop_cmd(second.docker_stop_cmd),
-    prod_env_path(second.prod_env_path),
-    stage_env_path(second.stage_env_path),
-    test_cmd(second.test_cmd),
+    branch(second.branch),
     github_token(second.github_token), 
-    latest_prod_version(second.latest_prod_version),
-    latest_stage_version(second.latest_stage_version),
-    current_prod_running_version(second.current_prod_running_version) {
+    run_cmd(second.run_cmd),
+    stop_cmd(second.stop_cmd),
+    status_cmd(second.status_cmd),
+    test_cmd(second.test_cmd),
+    latest_version(second.latest_version),
+    current_running_version(second.current_running_version),
+    local_latest_commit(second.local_latest_commit) {
   fmt::println(fg(fmt::color::yellow), "CD::Service::Service() Copy constructor Called");
 };
 
@@ -47,21 +48,22 @@ CD::Service& CD::Service::operator=(const CD::Service& second){
   fmt::println(fg(fmt::color::yellow), "CD::Service::Service() Copy assign constructor Called");
   if(this == &second) return *this;
 
+  config_path = second.config_path;
+  last_time_write = second.last_time_write;
   name = second.name;
   description = second.description;
   local_path = second.local_path;
+  env_path = second.env_path;
   repo_url = second.repo_url;
-  prod_branch = second.prod_branch;
-  stage_branch = second.stage_branch;
-  docker_run_cmd = second.docker_run_cmd;
-  docker_stop_cmd = second.docker_stop_cmd;
-  prod_env_path = second.prod_env_path;
-  stage_env_path = second.stage_env_path;
+  branch = second.branch;
+  github_token = second.github_token; 
+  run_cmd = second.run_cmd;
+  stop_cmd = second.stop_cmd;
+  status_cmd = second.status_cmd;
   test_cmd = second.test_cmd;
-  github_token = second.github_token;
-  latest_prod_version = second.latest_prod_version;
-  latest_stage_version = second.latest_stage_version;
-  current_prod_running_version = second.current_prod_running_version; 
+  latest_version = second.latest_version;
+  current_running_version = second.current_running_version;
+  local_latest_commit = second.local_latest_commit;
 
   return *this;
 };
@@ -69,21 +71,22 @@ CD::Service& CD::Service::operator=(const CD::Service& second){
 
 
 CD::Service::Service(CD::Service&& second)
-  : name(std::move(second.name)),
+  : config_path(std::move(second.config_path)),
+    last_time_write(std::move(second.last_time_write)),
+    name(std::move(second.name)),
     description(std::move(second.description)),
     local_path(std::move(second.local_path)),
+    env_path(std::move(second.env_path)),
     repo_url(std::move(second.repo_url)),
-    prod_branch(std::move(second.prod_branch)),
-    stage_branch(std::move(second.stage_branch)),
-    docker_run_cmd(std::move(second.docker_run_cmd)),
-    docker_stop_cmd(std::move(second.docker_stop_cmd)),
-    prod_env_path(std::move(second.prod_env_path)),
-    stage_env_path(std::move(second.stage_env_path)),
+    branch(std::move(second.branch)),
+    github_token(std::move(second.github_token)), 
+    run_cmd(std::move(second.run_cmd)),
+    stop_cmd(std::move(second.stop_cmd)),
+    status_cmd(std::move(second.status_cmd)),
     test_cmd(std::move(second.test_cmd)),
-    github_token(std::move(second.github_token)),
-    latest_prod_version(std::move(second.latest_prod_version)),
-    latest_stage_version(std::move(second.latest_stage_version)),
-    current_prod_running_version(std::move(second.current_prod_running_version)) {
+    latest_version(std::move(second.latest_version)),
+    current_running_version(std::move(second.current_running_version)),
+    local_latest_commit(std::move(second.local_latest_commit)) {
   fmt::println(fg(fmt::color::yellow), "CD::Service::Service() Move constructor Called");
 };
 
@@ -93,21 +96,22 @@ CD::Service& CD::Service::operator=(CD::Service&& second){
   fmt::println(fg(fmt::color::yellow), "CD::Service::Service() Move assign constructor Called");
   if(this == &second) return *this;
 
+  config_path = std::move(second.config_path);
+  last_time_write = std::move(second.last_time_write);
   name = std::move(second.name);
   description = std::move(second.description);
   local_path = std::move(second.local_path);
+  env_path = std::move(second.env_path);
   repo_url = std::move(second.repo_url);
-  prod_branch = std::move(second.prod_branch);
-  stage_branch = std::move(second.stage_branch);
-  docker_run_cmd = std::move(second.docker_run_cmd);
-  docker_stop_cmd = std::move(second.docker_stop_cmd);
-  prod_env_path = std::move(second.prod_env_path);
-  stage_env_path = std::move(second.stage_env_path);
+  branch = std::move(second.branch);
+  github_token = std::move(second.github_token); 
+  run_cmd = std::move(second.run_cmd);
+  stop_cmd = std::move(second.stop_cmd);
+  status_cmd = std::move(second.status_cmd);
   test_cmd = std::move(second.test_cmd);
-  github_token = std::move(second.github_token);
-  latest_prod_version = std::move(second.latest_prod_version);
-  latest_stage_version = std::move(second.latest_stage_version);
-  current_prod_running_version = std::move(second.current_prod_running_version);
+  latest_version = std::move(second.latest_version);
+  current_running_version = std::move(second.current_running_version);
+  local_latest_commit = std::move(second.local_latest_commit);
 
   return *this;
 };
@@ -120,31 +124,18 @@ void CD::Service::onStart(){
   printInfo();
   findLatestVersions();
 
-  local_latest_prod_commit = getLocalCommit(latest_prod_version, true);
-  local_latest_stage_commit = getLocalCommit(latest_stage_version, false);
-
-  if(runTests(latest_stage_version, false)){
-    if(latest_stage_version != -1) stopContainer(latest_stage_version - 1, false);  
-    if(runContainer(latest_stage_version, false)){
-      current_stage_running_version = latest_stage_version;
-      fmt::println(fg(fmt::color::green), "Latest Stage Container running on version {}", current_stage_running_version);
+  local_latest_commit = getLocalCommit(latest_version);
+  
+  if(runTests(latest_version)){
+    if(latest_version > 0) stopContainer(latest_version - 1);  
+    if(runContainer(latest_version)){
+      current_running_version = latest_version;
+      fmt::println(fg(fmt::color::green), "Latest Container running on version {}", current_running_version);
     };
       
-    local_latest_stage_commit = getLocalCommit(latest_stage_version, false);
+    local_latest_commit = getLocalCommit(latest_version);
   } else {
-    fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_stage_version);
-  };
-
-  if(runTests(latest_prod_version, true)){
-    if(latest_prod_version != -1) stopContainer(latest_prod_version - 1, true);  
-    if(runContainer(latest_prod_version, true)){
-      current_prod_running_version = latest_prod_version;
-      fmt::println(fg(fmt::color::green), "Latest Prod Container running on version {}", current_prod_running_version);
-    };
-      
-    local_latest_prod_commit = getLocalCommit(latest_prod_version, true);
-  } else {
-    fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_prod_version);
+    fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_version);
   };
 };
 
@@ -152,49 +143,38 @@ void CD::Service::onStart(){
 
 void CD::Service::onUpdate(){
   fmt::println(fg(fmt::color::blue), "CD::Service::onUpdate called");
-  std::string remote_latest_prod_commit = getRemoteCommit(true);
-  std::string remote_latest_stage_commit = getRemoteCommit(false);
+  
+  observeFile();
+  std::string remote_latest_commit = getRemoteCommit();
 
-  if(remote_latest_stage_commit != local_latest_stage_commit){
-    fmt::println(fg(fmt::color::green), "New commit detected for stage! Updating...");
+  if(remote_latest_commit != local_latest_commit){
+    fmt::println(fg(fmt::color::green), "New commit detected! Updating...");
     
-    latest_stage_version++;
-    cloneRepo(latest_stage_version, false);
+    latest_version++;
+    cloneRepo(latest_version);
 
-    if(runTests(latest_stage_version, false)){
-      if(latest_stage_version != -1) stopContainer(latest_stage_version - 1, false);  
-      if(runContainer(latest_stage_version, false)){
-        current_stage_running_version = latest_stage_version;
-        fmt::println(fg(fmt::color::green), "Latest Stage Container running on version {}", current_stage_running_version);
+    if(runTests(latest_version)){
+      if(latest_version > 0) stopContainer(latest_version - 1);  
+      if(runContainer(latest_version)){
+        current_running_version = latest_version;
+        fmt::println(fg(fmt::color::green), "Latest Container running on version {}", current_running_version);
       };
       
-      local_latest_stage_commit = getLocalCommit(latest_stage_version, false);
+      local_latest_commit = getLocalCommit(latest_version);
     } else {
-      fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_stage_version);
+      fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_version);
     };
   } else {
-    fmt::println(fg(fmt::color::dark_gray), "Stage is up to date.");
-  };
-
-  if(remote_latest_prod_commit != local_latest_prod_commit){
-    fmt::println(fg(fmt::color::green), "New commit detected for stage! Updating...");
-    
-    latest_prod_version++;
-    cloneRepo(latest_prod_version, true);
-
-    if(runTests(latest_prod_version, true)){
-      if(latest_prod_version != -1) stopContainer(latest_prod_version - 1, true);  
-      if(runContainer(latest_prod_version, true)){
-        current_prod_running_version = latest_prod_version;
-        fmt::println(fg(fmt::color::green), "Latest Prod Container running on version {}", current_prod_running_version);
-      };
-      
-      local_latest_prod_commit = getLocalCommit(latest_prod_version, true);
+    if(!statusContainer(latest_version)) {
+      fmt::println(fg(fmt::color::yellow), "Containers are down. Attempting to restart version {}...", latest_version);
+      if(!runContainer(latest_version)) {
+        fmt::println(fg(fmt::color::red), "Failed to restart containers on version {}", latest_version);
+      } else {
+        fmt::println(fg(fmt::color::green), "Containers successfully recovered and running!");
+      }
     } else {
-      fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_prod_version);
+      fmt::println(fg(fmt::color::dark_gray), "Container is up to date and running smoothly.");
     };
-  } else {
-    fmt::println(fg(fmt::color::dark_gray), "Prod is up to date.");
   };
 };
 
@@ -202,8 +182,7 @@ void CD::Service::onUpdate(){
 
 void CD::Service::onEnd(){
   fmt::println(fg(fmt::color::blue), "CD::Service::onEnd called");
-  stopContainer(current_stage_running_version, false);
-  stopContainer(current_prod_running_version, true);
+  stopContainer(current_running_version);
 };
 
 
@@ -227,16 +206,35 @@ void CD::Service::loadFromFile(const std::string& config){
     if(key == "NAME") name = value;
     else if(key == "DESCRIPTION") description = value;
     else if(key == "LOCAL_PATH") local_path = std::filesystem::path(value);
+    else if(key == "ENV_PATH") env_path = std::filesystem::path(value);
     else if(key == "REPO_URL") repo_url = value;
-    else if(key == "PROD_BRANCH") prod_branch = value;
-    else if(key == "STAGE_BRANCH") stage_branch = value;
-    else if(key == "DOCKER_RUN_CMD") docker_run_cmd = value;
-    else if(key == "DOCKER_STOP_CMD") docker_stop_cmd = value;
-    else if(key == "PROD_ENV_PATH") prod_env_path = std::filesystem::path(value);
-    else if(key == "STAGE_ENV_PATH") stage_env_path = std::filesystem::path(value);
-    else if(key == "TEST_CMD") test_cmd = value;
+    else if(key == "BRANCH") branch = value;
     else if(key == "GITHUB_TOKEN") github_token = value;
+    else if(key == "RUN_CMD") run_cmd = value;
+    else if(key == "STOP_CMD") stop_cmd = value;
+    else if(key == "STATUS_CMD") status_cmd = value;
+    else if(key == "TEST_CMD") test_cmd = value;
   };
+};
+
+
+
+void CD::Service::parseServiceFile(const std::filesystem::path& path){
+  config_path = path;
+
+  std::ifstream file(path);
+  
+  if (!file.is_open()) {
+    fmt::println(fg(fmt::color::red), "Can't open file: {}", path.string());
+    return;
+  };
+
+  std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  fileContent.erase(std::remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
+  fileContent.erase(std::remove(fileContent.begin(), fileContent.end(), '\r'), fileContent.end());
+   
+  loadFromFile(fileContent);
+  last_time_write = std::filesystem::last_write_time(config_path);
 };
 
 
@@ -246,13 +244,12 @@ void CD::Service::printInfo(){
   fmt::println(fg(fmt::color::purple), "=== {} Info ===", name);
   fmt::println(fg(fmt::color::purple), "Description:\n{}", description);
   fmt::println(fg(fmt::color::purple), "Local Path = {}", local_path.string());
+  fmt::println(fg(fmt::color::purple), "Env Path = {}", env_path.string());
   fmt::println(fg(fmt::color::purple), "Repo URL = {}", repo_url);
-  fmt::println(fg(fmt::color::purple), "Prod Branch = {}", prod_branch);
-  fmt::println(fg(fmt::color::purple), "Stage Branch = {}", stage_branch);
-  fmt::println(fg(fmt::color::purple), "Docker run cmd = {}", docker_run_cmd);
-  fmt::println(fg(fmt::color::purple), "Docker stop cmd = {}", docker_stop_cmd);
-  fmt::println(fg(fmt::color::purple), "Prod Env Path = {}", prod_env_path.string());
-  fmt::println(fg(fmt::color::purple), "Stage Env Path = {}", stage_env_path.string());
+  fmt::println(fg(fmt::color::purple), "Branch = {}", branch);
+  fmt::println(fg(fmt::color::purple), "Run cmd = {}", run_cmd);
+  fmt::println(fg(fmt::color::purple), "Stop cmd = {}", stop_cmd);
+  fmt::println(fg(fmt::color::purple), "Status cmd = {}", status_cmd);
   fmt::println(fg(fmt::color::purple), "Test cmd = {}", test_cmd);
 };
 
@@ -324,10 +321,12 @@ bool CD::Service::executeProcess(const std::vector<std::string>& args){
 
 
 
-void CD::Service::cloneRepo(size_t version, bool prod){
+void CD::Service::cloneRepo(size_t version){
   if(version == -1) return;
-  std::filesystem::path target_dir = local_path / ( prod ? CD::Config::SERVICE_PROD_PATH : CD::Config::SERVICE_STAGE_PATH ) / std::filesystem::path(std::to_string(version) + "/");
-  std::string branch = prod ? prod_branch : stage_branch;
+  if(branch == "") return;
+  if(repo_url == "") return;
+  trimeFolders();
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
     std::error_code ec;
@@ -356,9 +355,9 @@ void CD::Service::cloneRepo(size_t version, bool prod){
 
 
 
-void CD::Service::removeDir(size_t version, bool prod){
+void CD::Service::removeDir(size_t version){
   if(version == -1) return;
-  std::filesystem::path target_dir = local_path / ( prod ? CD::Config::SERVICE_PROD_PATH : CD::Config::SERVICE_STAGE_PATH ) / std::filesystem::path(std::to_string(version) + "/");
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
 
   if (!std::filesystem::exists(target_dir)) {
     fmt::println(fg(fmt::color::yellow), "Directory does not exist, nothing to remove: {}", target_dir.string());
@@ -377,13 +376,13 @@ void CD::Service::removeDir(size_t version, bool prod){
 
 
 
-bool CD::Service::runTests(size_t version, bool prod){
+bool CD::Service::runTests(size_t version){
   if(version == -1) return false;
-  std::filesystem::path target_dir = local_path / ( prod ? CD::Config::SERVICE_PROD_PATH : CD::Config::SERVICE_STAGE_PATH ) / std::filesystem::path(std::to_string(version) + "/");
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
     fmt::println(fg(fmt::color::red), "Directory {} didn't exists", target_dir.string());
-    return 0;
+    return false;
   };
 
   std::string full_command = "cd " + target_dir.string() + " && " + test_cmd;
@@ -393,23 +392,23 @@ bool CD::Service::runTests(size_t version, bool prod){
 
 
 
-bool CD::Service::runContainer(size_t version, bool prod) {
+bool CD::Service::runContainer(size_t version) {
   if(version == -1) return false;
-  std::filesystem::path target_dir = local_path / ( prod ? CD::Config::SERVICE_PROD_PATH : CD::Config::SERVICE_STAGE_PATH ) / std::filesystem::path(std::to_string(version) + "/");
+  if(run_cmd == "") return false;
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
     fmt::println(fg(fmt::color::red), "Directory {} didn't exists", target_dir.string());
     return false;
   };
 
-  std::string env_path = prod ? prod_env_path : stage_env_path;
-  std::string modified_docker_cmd = docker_run_cmd;
+  std::string modified_docker_cmd = run_cmd;
   
   std::string target_prefix = "docker compose";
   size_t pos = modified_docker_cmd.find(target_prefix);
   
   if (pos != std::string::npos)
-    modified_docker_cmd.insert(pos + target_prefix.length(), " --env-file " + env_path);
+    modified_docker_cmd.insert(pos + target_prefix.length(), " --env-file " + env_path.string());
 
   std::string full_command = "cd " + target_dir.string() + " && " + modified_docker_cmd;
   fmt::println(fg(fmt::color::cyan), "Running docker container in version {}: {}", version, full_command); 
@@ -418,23 +417,51 @@ bool CD::Service::runContainer(size_t version, bool prod) {
 
 
 
-bool CD::Service::stopContainer(size_t version, bool prod){
+bool CD::Service::statusContainer(size_t version){
+  if(version == static_cast<size_t>(-1)) return false;
+  if(status_cmd == "") return false;
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
+  
+  if (!std::filesystem::exists(target_dir)) {
+    fmt::println(fg(fmt::color::red), "Directory {} didn't exist", target_dir.string());
+    return false;
+  };
+
+  std::string modified_docker_cmd = status_cmd;
+  
+  // Replace ALL occurrences of "docker compose" with "docker compose --env-file <path>"
+  std::string target_prefix = "docker compose";
+  std::string replacement = "docker compose --env-file " + env_path.string();
+  size_t pos = 0;
+  while ((pos = modified_docker_cmd.find(target_prefix, pos)) != std::string::npos) {
+    modified_docker_cmd.replace(pos, target_prefix.length(), replacement);
+    pos += replacement.length();
+  }
+
+  std::string full_command = "cd " + target_dir.string() + " && " + modified_docker_cmd;
+  fmt::println(fg(fmt::color::cyan), "Checking container status in version {}: {}", version, full_command); 
+  return executeProcess({"/bin/sh", "-c", full_command});
+};
+
+
+
+bool CD::Service::stopContainer(size_t version){
   if(version == -1) return false;
-  std::filesystem::path target_dir = local_path / ( prod ? CD::Config::SERVICE_PROD_PATH : CD::Config::SERVICE_STAGE_PATH ) / std::filesystem::path(std::to_string(version) + "/");
+  if(stop_cmd == "") return false;
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
     fmt::println(fg(fmt::color::red), "Directory {} didn't exists", target_dir.string());
     return false;
   };
 
-  std::string env_path = prod ? prod_env_path : stage_env_path;
-  std::string modified_docker_cmd = docker_stop_cmd;
+  std::string modified_docker_cmd = stop_cmd;
   
   std::string target_prefix = "docker compose";
   size_t pos = modified_docker_cmd.find(target_prefix);
   
   if (pos != std::string::npos)
-    modified_docker_cmd.insert(pos + target_prefix.length(), " --env-file " + env_path);
+    modified_docker_cmd.insert(pos + target_prefix.length(), " --env-file " + env_path.string());
 
   std::string full_command = "cd " + target_dir.string() + " && " + modified_docker_cmd;
   fmt::println(fg(fmt::color::cyan), "Running docker container in version {}: {}", version, full_command); 
@@ -443,9 +470,7 @@ bool CD::Service::stopContainer(size_t version, bool prod){
 
 
 
-std::string CD::Service::getRemoteCommit(bool prod){
-  std::string branch = prod ? prod_branch : stage_branch;
-
+std::string CD::Service::getRemoteCommit(){ 
   std::string authenticated_url = repo_url;
   if (!github_token.empty()) {
     std::string prefix = "https://";
@@ -484,9 +509,9 @@ std::string CD::Service::getRemoteCommit(bool prod){
 
 
 
-std::string CD::Service::getLocalCommit(size_t version, bool prod) {
+std::string CD::Service::getLocalCommit(size_t version) {
   if(version == -1) return "";
-  std::filesystem::path target_dir = local_path / (prod ? CD::Config::SERVICE_PROD_PATH : CD::Config::SERVICE_STAGE_PATH) / std::filesystem::path(std::to_string(version) + "/");
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
 
   if (!std::filesystem::exists(target_dir)) {
     fmt::println(fg(fmt::color::red), "Directory {} doesn't exist", target_dir.string());
@@ -518,50 +543,69 @@ std::string CD::Service::getLocalCommit(size_t version, bool prod) {
     return "";
   };
 
-  fmt::println(fg(fmt::color::green), "Local commit for version {} (prod: {}): {}", version, prod, result);
+  fmt::println(fg(fmt::color::green), "Local commit for version {}: {}", version, result);
   return result;
 };
 
 
 
 void CD::Service::findLatestVersions() {
-  std::filesystem::path target_prod_dir = local_path / CD::Config::SERVICE_PROD_PATH;
-  std::filesystem::path target_stage_dir = local_path / CD::Config::SERVICE_STAGE_PATH;
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH;
 
-  long latest_prod = -1;
-  if (std::filesystem::exists(target_prod_dir) && std::filesystem::is_directory(target_prod_dir)) {
-    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(target_prod_dir)) {
+  long latest = -1;
+  if (std::filesystem::exists(target_dir) && std::filesystem::is_directory(target_dir)) {
+    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(target_dir)) {
       if (entry.is_directory()) {
         std::string folder_name = entry.path().filename().string();
         try {
           int version_num = std::stoi(folder_name);
-          if (version_num > latest_prod) {
-            latest_prod = version_num;
+          if (version_num > latest) {
+            latest = version_num;
           };
         } catch (...) {};
       };
     };
   };
 
-  long latest_stage = -1;
-  if (std::filesystem::exists(target_stage_dir) && std::filesystem::is_directory(target_stage_dir)) {
-    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(target_stage_dir)) {
-      if (entry.is_directory()) {
-        std::string folder_name = entry.path().filename().string();
-        try {
-          int version_num = std::stoi(folder_name);
-          if (version_num > latest_stage) {
-            latest_stage = version_num;
-          };
-        } catch (...) {};
-      };
+  latest_version = latest;
+
+  fmt::println(fg(fmt::color::cyan), "Latest Version found: {}", latest);
+};
+
+
+
+void CD::Service::observeFile(){
+  if(config_path == "") return;
+  std::filesystem::file_time_type new_last_time_write = std::filesystem::last_write_time(config_path);
+  if(new_last_time_write == last_time_write) return;
+  fmt::println(fg(fmt::color::blue), "Detected {} file change", config_path.string());
+  parseServiceFile(config_path);
+  local_latest_commit = "";
+  last_time_write = new_last_time_write;
+};
+
+
+
+void CD::Service::trimeFolders() {
+  if (local_path.empty()) return;
+    
+  std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH;
+  if (!std::filesystem::exists(target_dir) || !std::filesystem::is_directory(target_dir)) return;
+
+  size_t n = CD::Config::VERSION_TRIM; 
+  for (const auto& entry : std::filesystem::directory_iterator(target_dir)) {
+    if (entry.is_directory()) {
+      std::string folder_name = entry.path().filename().string();
+            
+      try {
+        size_t version = std::stoull(folder_name);
+                
+        if (version + n < latest_version) {
+          fmt::println(fg(fmt::color::yellow), "Trimming old version folder: {}", entry.path().string());
+          std::filesystem::remove_all(entry.path());
+        };
+      } catch (const std::exception& e) {};
     };
   };
-
-  latest_prod_version = latest_prod;
-  latest_stage_version = latest_stage;
-
-  fmt::println(fg(fmt::color::cyan), "Latest Production Version found: {}", latest_prod);
-  fmt::println(fg(fmt::color::cyan), "Latest Staging Version found: {}", latest_stage);
 };
 

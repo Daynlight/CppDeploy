@@ -13,8 +13,10 @@
 #include <array>
 #include <cstdio>
 #include <unistd.h>
-#include <sys/wait.h>
+#include <fstream>
+#include <iterator>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #include <fmt/base.h>
 #include <fmt/color.h>
@@ -29,26 +31,22 @@ class Service{
 // === Data ================== //
 // =========================== //
 private:
+  std::filesystem::path config_path = "";
+  std::filesystem::file_time_type last_time_write = {};
   std::string name = "";
   std::string description = "";
   std::filesystem::path local_path = "";
+  std::filesystem::path env_path = "";
   std::string repo_url = "";
-  std::string prod_branch = "";
-  std::string stage_branch = "";
-  std::string docker_run_cmd = "";
-  std::string docker_stop_cmd = "";
-  std::filesystem::path prod_env_path = "";
-  std::filesystem::path stage_env_path = "";
-  std::string test_cmd = "";
+  std::string branch = "";
   std::string github_token = "";
-  size_t latest_prod_version = -1;
-  size_t latest_stage_version = -1;
-  size_t current_prod_running_version = -1;
-  size_t current_stage_running_version = -1;
-
-  std::string local_latest_stage_commit = "";
-  std::string local_latest_prod_commit = "";
-
+  std::string run_cmd = "";
+  std::string stop_cmd = "";
+  std::string status_cmd = "";
+  std::string test_cmd = "";
+  size_t latest_version = -1;
+  size_t current_running_version = -1;
+  std::string local_latest_commit = "";
 
 
 
@@ -73,6 +71,7 @@ public:
 // === Getters/Setters
 public:
   void loadFromFile(const std::string& config);
+  void parseServiceFile(const std::filesystem::path& path);
 
 // === Helpers
 private:
@@ -82,16 +81,19 @@ private:
   bool waitForProcess(pid_t pid);
   bool executeProcess(const std::vector<std::string>& args);
   
-  void cloneRepo(size_t version, bool prod);
-  void removeDir(size_t version, bool prod);
-  bool runTests(size_t version, bool prod);
-  bool runContainer(size_t version, bool prod);
-  bool stopContainer(size_t version, bool prod);
+  void cloneRepo(size_t version);
+  void removeDir(size_t version);
+  bool runTests(size_t version);
+  bool runContainer(size_t version);
+  bool statusContainer(size_t version);
+  bool stopContainer(size_t version);
   
-  std::string getRemoteCommit(bool pord);
-  std::string getLocalCommit(size_t version, bool pord);
+  std::string getRemoteCommit();
+  std::string getLocalCommit(size_t version);
  
   void findLatestVersions();
+  void observeFile();
+  void trimeFolders();
 };
 };
 

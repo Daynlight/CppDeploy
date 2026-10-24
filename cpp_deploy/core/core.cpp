@@ -87,9 +87,7 @@ void CD::Core::parseServiceFile(const std::filesystem::path& path){
   std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   fileContent.erase(std::remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
   fileContent.erase(std::remove(fileContent.begin(), fileContent.end(), '\r'), fileContent.end());
-  
-  fmt::println(fg(fmt::color::pink), "File {}\n {}", path.string(), fileContent);
-  
+   
   auto [it, inserted] = services.try_emplace(path); 
   it->second.loadFromFile(fileContent);
 };

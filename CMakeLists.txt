@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(CPP_DEPLOY_BUILD_EXAMPLES "Build Examples" ON)
 option(CPP_DEPLOY_BUILD_TESTS "Build Tests" ON)
+option(CPP_DEPLOY_INSTALL "Build Install" OFF)
 
 # ==== Vcpkg ==== #
 if(WIN32)
@@ -31,6 +32,7 @@ if(CPP_DEPLOY_BUILD_TESTS)
 endif()
 
 # ==== Install ==== #
+if(CPP_DEPLOY_INSTALL)
 include(GNUInstallDirs)
 
 install(TARGETS cpp_deploy
@@ -56,5 +58,11 @@ if(UNIX AND NOT APPLE)
     DESTINATION ${SYSTEMD_UNIT_DIR}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
   )
+endif()
+  
+target_compile_definitions(cpp_deploy PRIVATE 
+  CPP_DEPLOY_INSTALL
+  SYSCONF_DIR="${CMAKE_INSTALL_FULL_SYSCONFDIR}/cpp_deploy"
+)
 endif()
 

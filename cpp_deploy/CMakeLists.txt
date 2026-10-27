@@ -7,6 +7,7 @@
 
 # ==== Dependencies ==== #
 find_package(fmt CONFIG REQUIRED)
+find_package(boost_asio CONFIG REQUIRED)
 
 
 
@@ -22,5 +23,6 @@ set(src
 add_executable(cpp_deploy ${src})
 target_link_libraries(cpp_deploy PRIVATE 
   fmt::fmt
+  Boost::asio
 )
 

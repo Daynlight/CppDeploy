@@ -54,7 +54,6 @@ private:
   void parseServiceFile(const std::filesystem::path& path);
   void loadServices();
   void removeServices();
-
 };
 };
 

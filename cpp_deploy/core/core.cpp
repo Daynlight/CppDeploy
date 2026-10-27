@@ -69,6 +69,13 @@ void CD::Core::onUpdate(){
 
 
 
+void CD::Core::onHealthCheck(){
+  fmt::println(fg(fmt::color::blue), "CD::Core::onHealthCheck called");
+  for(std::pair<const std::filesystem::path, CD::Service>& service : services) service.second.onHealthCheck();
+};
+
+
+
 void CD::Core::onEnd(){
   fmt::println(fg(fmt::color::blue), "CD::Core::onEnd called");
   for(std::pair<const std::filesystem::path, CD::Service>& service : services) service.second.onEnd();

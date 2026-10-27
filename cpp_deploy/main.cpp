@@ -130,7 +130,8 @@ int main() {
   std::thread server_thread(run_server, std::ref(core));
 
   while (g_running) {
-    usleep(CD::Config::UPDATE_TIME_MS);
+    core.onHealthCheck();
+    std::this_thread::sleep_for(std::chrono::milliseconds(CD::Config::UPDATE_TIME_MS));
   };
 
   fmt::println(fg(fmt::color::red), "[Daemon] Shutting down...");

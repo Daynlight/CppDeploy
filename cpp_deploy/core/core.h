@@ -47,6 +47,7 @@ public:
 public:
   void onStart();
   void onUpdate();
+  void onHealthCheck();
   void onEnd();
 
 // === Helpers

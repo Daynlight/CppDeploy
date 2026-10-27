@@ -165,16 +165,26 @@ void CD::Service::onUpdate(){
       fmt::println(fg(fmt::color::red), "Tests failed for version {}. Aborting update.", latest_version);
     };
   } else {
-    if(!statusContainer(latest_version)) {
-      fmt::println(fg(fmt::color::yellow), "Containers are down. Attempting to restart version {}...", latest_version);
-      if(!runContainer(latest_version)) {
-        fmt::println(fg(fmt::color::red), "Failed to restart containers on version {}", latest_version);
-      } else {
-        fmt::println(fg(fmt::color::green), "Containers successfully recovered and running!");
-      }
+    onHealthCheck();
+  };
+};
+
+
+
+void CD::Service::onHealthCheck(){
+  fmt::println(fg(fmt::color::blue), "CD::Service::onHealthCheck called");
+  
+  observeFile();
+
+  if(!statusContainer(latest_version)) {
+    fmt::println(fg(fmt::color::yellow), "Containers are down. Attempting to restart version {}...", latest_version);
+    if(!runContainer(latest_version)) {
+      fmt::println(fg(fmt::color::red), "Failed to restart containers on version {}", latest_version);
     } else {
-      fmt::println(fg(fmt::color::dark_gray), "Container is up to date and running smoothly.");
-    };
+      fmt::println(fg(fmt::color::green), "Containers successfully recovered and running!");
+    }
+  } else {
+    fmt::println(fg(fmt::color::dark_gray), "Container is up to date and running smoothly.");
   };
 };
 

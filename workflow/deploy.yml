@@ -1,0 +1,20 @@
+name: Deploy via Local Daemon
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Call inner api for update
+        run: |
+          curl -X POST http://127.0.0.1:9923/api/update \
+            -H "Content-Type: application/json" \
+            -d '{"commit": "${{ github.sha }}"}'

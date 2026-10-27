@@ -28,8 +28,7 @@ class Core{
 // =========================== //
 private:
   std::unordered_map<std::filesystem::path, CD::Service> services;
-
-
+  std::filesystem::file_time_type last_time_write = {};
 
 // =========================== //
 // === Functional ============ //
@@ -55,6 +54,7 @@ private:
   void parseServiceFile(const std::filesystem::path& path);
   void loadServices();
   void removeServices();
+
 };
 };
 

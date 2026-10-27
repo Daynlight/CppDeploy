@@ -63,6 +63,7 @@ void CD::Core::onStart(){
 
 void CD::Core::onUpdate(){
   fmt::println(fg(fmt::color::blue), "CD::Core::onUpdate called");
+  loadServices();
   for(std::pair<const std::filesystem::path, CD::Service>& service : services) service.second.onUpdate();
 };
 
@@ -78,7 +79,7 @@ void CD::Core::onEnd(){
 // === Helpers
 void CD::Core::loadServices(){
   std::filesystem::path serviceDir = CD::Config::CONFIG_FILES_PATH;
-  
+
   if (!std::filesystem::exists(serviceDir)) {
     std::error_code ec;
     if (std::filesystem::create_directories(serviceDir, ec)) 
@@ -99,5 +100,39 @@ void CD::Core::loadServices(){
       it->second.parseServiceFile(entry.path());
     };
   };
+
+  removeServices();
+};
+
+
+
+void CD::Core::removeServices() {
+  std::filesystem::path serviceDir = CD::Config::CONFIG_FILES_PATH;
+
+  std::unordered_map<std::filesystem::path, bool> services_to_remove;
+  services_to_remove.reserve(services.size());
+  for(auto kv : services) services_to_remove.try_emplace(kv.first);
+  
+  if (!std::filesystem::exists(serviceDir)) {
+    std::error_code ec;
+    if (std::filesystem::create_directories(serviceDir, ec)) 
+      fmt::println(fg(fmt::color::yellow), "Created missing service directory: {}", serviceDir.string());
+    else {
+      fmt::println(fg(fmt::color::yellow), "Failed to create directory {} : {}", serviceDir.string(),  ec.message());
+      return;
+    };
+  };
+
+  for (const auto& entry : std::filesystem::directory_iterator(serviceDir)) {
+    std::string filename = entry.path().filename().string();
+    if (std::regex_search(filename, CD::Config::SERVICE_EXCLUDE_PATTERN)) continue;
+    if (!std::regex_search(filename, CD::Config::SERVICE_INCLUDE_PATTERN)) continue;
+    if (!services.contains(entry.path())) continue;
+    if (entry.is_regular_file()) {
+      services_to_remove.erase(entry.path()); 
+    };
+  };
+
+  for(const std::pair<std::filesystem::path, bool>& el : services_to_remove) services.erase(el.first);
 };
 

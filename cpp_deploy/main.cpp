@@ -74,12 +74,14 @@ void handle_client(boost::asio::ip::tcp::socket socket, CD::Core& core) {
       core.onUpdate();
     };
 
+    std::string json_body = "{\"status\":\"success\",\"message\":\"ok\"}";
+
     std::string response = 
       "HTTP/1.1 200 OK\r\n"
       "Content-Type: application/json\r\n"
-      "Content-Length: 39\r\n"
-      "Connection: close\r\n\r\n"
-      "{\"status\":\"success\",\"message\":\"ok\"}";
+      "Content-Length: " + std::to_string(json_body.length()) + "\r\n"
+      "Connection: close\r\n\r\n" 
+      + json_body;
 
     boost::asio::write(socket, boost::asio::buffer(response));
 

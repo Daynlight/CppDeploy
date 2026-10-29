@@ -18,6 +18,7 @@ set(src
   main.cpp
   core/core.cpp
   service/service.cpp
+  server/server.cpp
 )
 
 add_executable(cpp_deploy ${src})

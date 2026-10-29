@@ -35,11 +35,11 @@ vcpkg install --x-install-root=./vendor
 ```
 ### Build and run
 ```bash
-cmake -S . -B build -G Ninja && cmake --build build/ && sudo build/cpp_deploy/cpp_deploy 
+cmake -S . -B build -G Ninja -DCPP_DEPLOY_INSTALL=OFF && cmake --build build/ && sudo build/cpp_deploy/cpp_deploy 
 ```
 ### Build and install daemon
 ```bash
-cmake -S . -B build -G Ninja -DCPP_DEPLOY_INSTALL=ON  && cmake --build build/ && sudo cmake --install build
+cmake -S . -B build -G Ninja -DCPP_DEPLOY_INSTALL=ON && cmake --build build/ && sudo cmake --install build
 ```
 ```bash
 sudo systemctl daemon-reload
@@ -69,6 +69,13 @@ TEST_CMD = cd backend/backend/ && npm install && npm test;
 ```
 Update happends after api call on `localhost:9923/api/update` the best way is settings `github action-runner` to minimize server exposure.
 
+
+## Terminal Colors
+### Systems
+Server - chocolate
+
+### Codes
+Errors - dark_red
 
 ## Prerequisites
 - cmake

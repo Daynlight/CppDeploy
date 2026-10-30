@@ -33,8 +33,7 @@ void CD::Server::onStart() {
   if (!server_thread.joinable()) {
     server_thread = std::thread([this](){ runServer(); });
     CD::Logger::get().print(CD::LS::Server, "server_handler started successfully");
-  }
-  else CD::Logger::get().print(CD::LS::Server, "server_handler is already running");
+  } else CD::Logger::get().print(CD::LS::Server, "server_handler is already running");
 };
 
 
@@ -130,8 +129,7 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
     else {
       std::string ip_str = endpoint_ec ? "unknown" : client_ip.to_string();
       CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Called from IP: {} ! Rejecting !", ip_str); 
-      std::string err_response = "HTTP/1.1 403 Forbidden\r\nContent-Length: 15\r\nConnection: close\r\n\r\nAccess Denied";
-      boost::asio::write(socket, boost::asio::buffer(err_response));
+      sendRespond(CD::SR::Forbidden, socket);
       return;
     };
 
@@ -144,8 +142,7 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
       CD::Logger::get().print(CD::LS::ServerClientHandlerError, "failed to parse http request line");
       std::string ip_str = endpoint_ec ? "unknown" : client_ip.to_string();
       CD::Logger::get().print(CD::LS::ServerClientHandlerError, "called from ip: {} ! rejecting !", ip_str); 
-      std::string err_response = "http/1.1 403 forbidden\r\ncontent-length: 15\r\nconnection: close\r\n\r\naccess denied";
-      boost::asio::write(socket, boost::asio::buffer(err_response));
+      sendRespond(CD::SR::Forbidden, socket);
       return;
     };
     
@@ -153,8 +150,7 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
       CD::Logger::get().print(CD::LS::ServerClientHandlerError, "uri too long");
       std::string ip_str = endpoint_ec ? "unknown" : client_ip.to_string();
       CD::Logger::get().print(CD::LS::ServerClientHandlerError, "called from ip: {} ! rejecting !", ip_str); 
-      std::string err_response = "http/1.1 403 forbidden\r\ncontent-length: 15\r\nconnection: close\r\n\r\naccess denied";
-      boost::asio::write(socket, boost::asio::buffer(err_response));
+      sendRespond(CD::SR::Forbidden, socket);
       return;
     };
 
@@ -169,8 +165,7 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
           content_length = std::stoul(match[1].str());
         } catch (...) {
           CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Content-Length numeric overflow");
-          std::string err_response = "http/1.1 400 Bad Request\r\ncontent-length: 11\r\nconnection: close\r\n\r\nBad Request";
-          boost::asio::write(socket, boost::asio::buffer(err_response));
+          sendRespond(CD::SR::Bad_Request, socket);
           return;
         };
 
@@ -180,8 +175,7 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
 
     if (content_length > CD::Config::CLIENT_MAX_BODY_SIZE) {
       CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Payload too large: {} bytes (Limit: {})", content_length, CD::Config::CLIENT_MAX_BODY_SIZE);      
-      std::string err_response = "http/1.1 413 Payload Too Large\r\ncontent-length: 17\r\nconnection: close\r\n\r\nPayload Too Large";
-      boost::asio::write(socket, boost::asio::buffer(err_response));
+      sendRespond(CD::SR::Payload_To_Large, socket);
       return;
     };
 
@@ -201,9 +195,8 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
         
         if (read_ec) {
           CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Socket read error while fetching body: {}", read_ec.message());
-          std::string err_response = "http/1.1 400 Bad Request\r\ncontent-length: 11\r\nconnection: close\r\n\r\nBad Request";
           boost::system::error_code write_ec;
-          boost::asio::write(socket, boost::asio::buffer(err_response), write_ec);
+          sendRespond(CD::SR::Bad_Request, socket, &write_ec);
           return;
         };
         
@@ -219,20 +212,31 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
       update_request_count++;
     };
 
-    std::string json_body = "{\"status\":\"success\",\"message\":\"added update request\"}";
-    std::string response = 
-      "HTTP/1.1 200 OK\r\n"
-      "Content-Type: application/json\r\n"
-      "Content-Length: " + std::to_string(json_body.length()) + "\r\n"
-      "Connection: close\r\n\r\n" 
-      + json_body;
-
-    boost::asio::write(socket, boost::asio::buffer(response));
+    std::string respond = "Connection: Close\r\n\r\n\"{status\":\"success\",\"message\":\"added update request\"}";
+    sendRespond(CD::RC::Ok, CD::CT::Json, respond, socket);
 
   } catch (std::exception& e) {
     CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Fatal Error: {}", e.what());
   };
 
   CD::Logger::get().print(CD::LS::ServerClientHandler, "handleClient Ended");
+};
+
+
+
+void CD::Server::sendRespond(const std::string& code, const std::string& type, const std::string& message, boost::asio::ip::tcp::socket& socket, boost::system::error_code* err){
+  std::string type_line = type.empty() ? "" : type + "\r\n";
+  std::string respond = fmt::format("{}\r\n{}content-length: {}\r\n{}\r\n\r\n", code, type_line, message.size(), message);
+
+  if(err != nullptr) boost::asio::write(socket, boost::asio::buffer(respond), *err);
+  else boost::asio::write(socket, boost::asio::buffer(respond));
+  
+  CD::Logger::get().print(CD::LS::ServerClientHandler, "respond: {}", respond);
+};
+
+
+
+void CD::Server::sendRespond(CD::ShortRespond respond, boost::asio::ip::tcp::socket& socket, boost::system::error_code* err) {
+  sendRespond(respond.code, respond.type, respond.message, socket, err);
 };
 

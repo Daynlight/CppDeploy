@@ -72,10 +72,26 @@ Update happends after api call on `localhost:9923/api/update` the best way is se
 
 ## Terminal Colors
 ### Systems
+Main - deep_pink
+Core - deep_sky_blue
 Server - chocolate
+
+### Services
+1. dark_slate_gray
+2. blue_violet
+3. dark_magenta
+4. dark_orchid
+5. dark_slate_blue
+6. dark_violet
+7. indigo
+8. midnight_blue
+9. purple
+10. pale_violet_red
+11. rebecca_purple
 
 ### Codes
 Errors - dark_red
+
 
 ## Prerequisites
 - cmake

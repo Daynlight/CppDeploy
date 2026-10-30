@@ -15,8 +15,6 @@
 #include <regex>
 
 #include <boost/asio.hpp>
-#include <fmt/base.h>
-#include <fmt/color.h>
 
 #include "../core/core.h"
 #include "../config.h"

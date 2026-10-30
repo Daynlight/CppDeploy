@@ -18,9 +18,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <fmt/base.h>
-#include <fmt/color.h>
-
+#include "../logger/logger.h"
 #include "../config.h"
 
 
@@ -47,6 +45,7 @@ private:
   size_t latest_version = -1;
   size_t current_running_version = -1;
   std::string local_latest_commit = "";
+  size_t color_id = 0;
 
 
 

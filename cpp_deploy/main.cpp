@@ -14,9 +14,6 @@
 #include <vector>
 #include <chrono>
 
-#include <fmt/base.h>
-#include <fmt/color.h>
-
 #include "core/core.h"
 #include "server/server.h"
 #include "config.h"

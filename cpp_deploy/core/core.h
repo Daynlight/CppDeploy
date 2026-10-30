@@ -17,6 +17,7 @@
 #include <fmt/color.h>
 
 #include "../service/service.h"
+#include "../logger/logger.h"
 #include "../config.h"
 
 

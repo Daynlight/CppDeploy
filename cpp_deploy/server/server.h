@@ -20,6 +20,7 @@
 
 #include "../core/core.h"
 #include "../config.h"
+#include "../logger/logger.h"
 
 
 

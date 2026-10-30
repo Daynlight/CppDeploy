@@ -35,7 +35,5 @@ namespace CD::Config{
   inline const std::regex SERVICE_INCLUDE_PATTERN(R"(^.*\.(txt|json|conf)$)");
   inline const std::regex FIND_CONTENT_LENGTH("^(?:content-length)\\s*:\\s*([0-9]+)", std::regex_constants::icase);
   inline const std::filesystem::path SERVICE_REPOS_DIR_PATH = std::filesystem::path("repos/");
-  inline const fmt::color SERVER_LOG = fmt::color::chocolate;
-  inline const fmt::color ERROR_LOG = fmt::color::dark_red;
 };
 

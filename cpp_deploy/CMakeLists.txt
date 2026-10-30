@@ -19,6 +19,7 @@ set(src
   core/core.cpp
   service/service.cpp
   server/server.cpp
+  logger/logger.cpp
 )
 
 add_executable(cpp_deploy ${src})

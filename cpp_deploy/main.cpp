@@ -12,14 +12,15 @@
 #include <atomic>
 #include <string>
 #include <vector>
+#include <chrono>
 
-#include <boost/asio.hpp>
 #include <fmt/base.h>
 #include <fmt/color.h>
 
 #include "core/core.h"
 #include "server/server.h"
 #include "config.h"
+#include "logger/logger.h"
 
 
 
@@ -29,6 +30,7 @@ std::atomic<bool> g_running = true;
 
 void handle_signal(int signal) {
   if (signal == SIGTERM || signal == SIGINT) {
+    CD::Logger::get().print(CD::LS::SginalBold, "SIGTERM/SIGINT detected");
     g_running = false;
   };
 };
@@ -36,29 +38,48 @@ void handle_signal(int signal) {
 
 
 int main() {
+  CD::Logger::get().print(CD::LS::MainBold, "=== Main Starts ===");
+  
   std::atomic<size_t> update_request_count = 1;
   setbuf(stdout, NULL);
   std::signal(SIGTERM, handle_signal);
   std::signal(SIGINT, handle_signal);
-
+  CD::Logger::get().print(CD::LS::Main, "Signal handlers setted");
+  
   CD::Core core;
   CD::Server server(update_request_count, g_running);
   server.onStart();
   core.onStart();
+  CD::Logger::get().print(CD::LS::Main, "Core and Server started");
 
   while (g_running) {
+    auto start_time = std::chrono::steady_clock::now();
+    
+    CD::Logger::get().print(CD::LS::Main, "Main loop called");
+    
     core.onHealthCheck();
+    CD::Logger::get().print(CD::LS::Main, "Core health check");
     
     size_t pending_updates = update_request_count.exchange(0);
-    for (size_t i = 0; i < pending_updates; ++i) core.onUpdate();
+    CD::Logger::get().print(CD::LS::Main, "Core update requests: {}", pending_updates);
+    for (size_t i = 0; i < pending_updates; ++i) {
+      core.onUpdate();
+      CD::Logger::get().print(CD::LS::Main, "Core update request");
+    };
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(CD::Config::UPDATE_TIME_MS));
+    auto end_time = std::chrono::steady_clock::now();
+    std::chrono::duration<float> duration = end_time - start_time;
+    CD::Logger::get().print(CD::LS::Main, "Main Loop Took: {:.3f}s", duration.count());
+    
+    auto elapsed = end_time - start_time;
+    auto target_interval = std::chrono::milliseconds(CD::Config::UPDATE_TIME_MS);
+    if (elapsed < target_interval) std::this_thread::sleep_for(target_interval - elapsed);
   };
 
-  fmt::println(fg(fmt::color::red), "[Daemon] Shutting down...");
-  core.onEnd();
-
+  CD::Logger::get().print(CD::LS::MainBold, "Shutdown...");
   server.onEnd();
+  core.onEnd();
+  CD::Logger::get().print(CD::LS::Main, "Core and Server ended");
 
   return 0;
 };

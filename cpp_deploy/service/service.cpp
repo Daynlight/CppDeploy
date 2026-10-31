@@ -12,13 +12,13 @@
 // === Constructors
 CD::Service::Service(){
   color_id = CD::Logger::get().getServiceColor();
-  CD::Logger::get().print(name, color_id, "CD::Service::Service() Constructor Called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::Service() Constructor Called");
 };
 
 
 
 CD::Service::~Service(){
-  CD::Logger::get().print(name, color_id, "CD::Service::~Service() Destructor Called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::~Service() Destructor Called");
 };
 
 
@@ -40,14 +40,14 @@ CD::Service::Service(const CD::Service& second)
     latest_version(second.latest_version),
     current_running_version(second.current_running_version),
     local_latest_commit(second.local_latest_commit) {
-  CD::Logger::get().print(name, color_id, "CD::Service::Service() Copy constructor Called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::Service() Copy constructor Called");
   color_id = CD::Logger::get().getServiceColor();
 };
 
 
 
 CD::Service& CD::Service::operator=(const CD::Service& second){
-  CD::Logger::get().print(name, color_id, "CD::Service::Service() Copy assign constructor Called"); 
+  CD::Logger::get().print("log", name, color_id, "CD::Service::Service() Copy assign constructor Called"); 
   if(this == &second) return *this;
 
   config_path = second.config_path;
@@ -91,13 +91,13 @@ CD::Service::Service(CD::Service&& second)
     current_running_version(std::move(second.current_running_version)),
     local_latest_commit(std::move(second.local_latest_commit)),
     color_id(std::move(second.color_id)) {
-  CD::Logger::get().print(name, color_id, "CD::Service::Service() Move constructor Called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::Service() Move constructor Called");
 };
 
 
 
 CD::Service& CD::Service::operator=(CD::Service&& second) {
-  CD::Logger::get().print(name, color_id, "CD::Service::Service() Move assign constructor Called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::Service() Move assign constructor Called");
   if(this == &second) return *this;
 
   config_path = std::move(second.config_path);
@@ -125,7 +125,7 @@ CD::Service& CD::Service::operator=(CD::Service&& second) {
 
 // === Loop
 void CD::Service::onStart(){
-  CD::Logger::get().print(name, color_id, "CD::Service::onStart called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::onStart called");
   printInfo();
   findLatestVersions();
 
@@ -135,25 +135,25 @@ void CD::Service::onStart(){
     if(latest_version > 0) stopContainer(latest_version - 1);  
     if(runContainer(latest_version)){
       current_running_version = latest_version;
-      CD::Logger::get().print(name, color_id, "Latest Container running on version {}", current_running_version);
+      CD::Logger::get().print("log", name, color_id, "Latest Container running on version {}", current_running_version);
     };
       
     local_latest_commit = getLocalCommit(latest_version);
   } else {
-    CD::Logger::get().print(name,  "Tests failed for version {}. Aborting update.", latest_version);
+    CD::Logger::get().print("log", name,  "Tests failed for version {}. Aborting update.", latest_version);
   };
 };
 
 
 
 void CD::Service::onUpdate(){
-  CD::Logger::get().print(name, color_id, "CD::Service::onUpdate called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::onUpdate called");
   
   observeFile();
   std::string remote_latest_commit = getRemoteCommit();
 
   if(remote_latest_commit != local_latest_commit){
-    CD::Logger::get().print(name, color_id, "New commit detected! Updating...");
+    CD::Logger::get().print("log", name, color_id, "New commit detected! Updating...");
     
     latest_version++;
     cloneRepo(latest_version);
@@ -162,12 +162,12 @@ void CD::Service::onUpdate(){
       if(latest_version > 0) stopContainer(latest_version - 1);  
       if(runContainer(latest_version)){
         current_running_version = latest_version;
-        CD::Logger::get().print(name, color_id, "Latest Container running on version {}", current_running_version);
+        CD::Logger::get().print("log", name, color_id, "Latest Container running on version {}", current_running_version);
       };
       
       local_latest_commit = getLocalCommit(latest_version);
     } else {
-      CD::Logger::get().print(name,  "Tests failed for version {}. Aborting update.", latest_version);
+      CD::Logger::get().print("log", name,  "Tests failed for version {}. Aborting update.", latest_version);
     };
   } else {
     onHealthCheck();
@@ -177,26 +177,26 @@ void CD::Service::onUpdate(){
 
 
 void CD::Service::onHealthCheck(){
-  CD::Logger::get().print(name, color_id, "CD::Service::onHealthCheck called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::onHealthCheck called");
   
   observeFile();
 
   if(!statusContainer(latest_version)) {
-    CD::Logger::get().print(name, color_id, "Containers are down. Attempting to restart version {}...", latest_version);
+    CD::Logger::get().print("log", name, color_id, "Containers are down. Attempting to restart version {}...", latest_version);
     if(!runContainer(latest_version)) {
-      CD::Logger::get().print(name,  "Failed to restart containers on version {}", latest_version);
+      CD::Logger::get().print("log", name,  "Failed to restart containers on version {}", latest_version);
     } else {
-      CD::Logger::get().print(name, color_id, "Containers successfully recovered and running!");
+      CD::Logger::get().print("log", name, color_id, "Containers successfully recovered and running!");
     }
   } else {
-    CD::Logger::get().print(name, color_id,  "Container is up to date and running smoothly.");
+    CD::Logger::get().print("log", name, color_id,  "Container is up to date and running smoothly.");
   };
 };
 
 
 
 void CD::Service::onEnd(){
-  CD::Logger::get().print(name, color_id, "CD::Service::onEnd called");
+  CD::Logger::get().print("log", name, color_id, "CD::Service::onEnd called");
   stopContainer(current_running_version);
 };
 
@@ -240,7 +240,7 @@ void CD::Service::parseServiceFile(const std::filesystem::path& path){
   std::ifstream file(path);
   
   if (!file.is_open()) {
-    CD::Logger::get().print(name,  "Can't open file: {}", path.string());
+    CD::Logger::get().print("log", name,  "Can't open file: {}", path.string());
     return;
   };
 
@@ -256,16 +256,16 @@ void CD::Service::parseServiceFile(const std::filesystem::path& path){
 
 // === Helpers
 void CD::Service::printInfo(){
-  CD::Logger::get().print(name, color_id,  "=== {} Info ===", name);
-  CD::Logger::get().print(name, color_id,  "Description:\n{}", description);
-  CD::Logger::get().print(name, color_id,  "Local Path = {}", local_path.string());
-  CD::Logger::get().print(name, color_id,  "Env Path = {}", env_path.string());
-  CD::Logger::get().print(name, color_id,  "Repo URL = {}", repo_url);
-  CD::Logger::get().print(name, color_id,  "Branch = {}", branch);
-  CD::Logger::get().print(name, color_id,  "Run cmd = {}", run_cmd);
-  CD::Logger::get().print(name, color_id,  "Stop cmd = {}", stop_cmd);
-  CD::Logger::get().print(name, color_id,  "Status cmd = {}", status_cmd);
-  CD::Logger::get().print(name, color_id,  "Test cmd = {}", test_cmd);
+  CD::Logger::get().print("log", name, color_id,  "=== {} Info ===", name);
+  CD::Logger::get().print("log", name, color_id,  "Description:\n{}", description);
+  CD::Logger::get().print("log", name, color_id,  "Local Path = {}", local_path.string());
+  CD::Logger::get().print("log", name, color_id,  "Env Path = {}", env_path.string());
+  CD::Logger::get().print("log", name, color_id,  "Repo URL = {}", repo_url);
+  CD::Logger::get().print("log", name, color_id,  "Branch = {}", branch);
+  CD::Logger::get().print("log", name, color_id,  "Run cmd = {}", run_cmd);
+  CD::Logger::get().print("log", name, color_id,  "Stop cmd = {}", stop_cmd);
+  CD::Logger::get().print("log", name, color_id,  "Status cmd = {}", status_cmd);
+  CD::Logger::get().print("log", name, color_id,  "Test cmd = {}", test_cmd);
 };
 
 
@@ -282,16 +282,16 @@ pid_t CD::Service::spawnProcess(const std::vector<std::string>& args) {
   pid_t pid = fork();
 
   if (pid < 0) {
-    CD::Logger::get().print(name,  "Failed to fork process for service.");
+    CD::Logger::get().print("log", name,  "Failed to fork process for service.");
     return -1;
   } 
   else if (pid == 0) {
     execvp(c_args[0], c_args.data());
-    CD::Logger::get().print(name,  "Failed to execute binary: {}", c_args[0]);
+    CD::Logger::get().print("log", name,  "Failed to execute binary: {}", c_args[0]);
     _exit(127);
   } 
   else {
-    CD::Logger::get().print(name, color_id, "Spawned child process with PID: {}", pid);
+    CD::Logger::get().print("log", name, color_id, "Spawned child process with PID: {}", pid);
     return pid;
   };
 };
@@ -305,23 +305,23 @@ bool CD::Service::waitForProcess(pid_t pid) {
   pid_t result_pid = waitpid(pid, &status, 0);
 
   if (result_pid < 0) {
-    CD::Logger::get().print(name,  "Failed to wait for process with PID: {}", pid);
+    CD::Logger::get().print("log", name,  "Failed to wait for process with PID: {}", pid);
     return false;
   };
 
   if (WIFEXITED(status)) {
     int exit_code = WEXITSTATUS(status);
     if (exit_code == 0) {
-      CD::Logger::get().print(name, color_id, "Process with PID {} finished successfully.", pid);
+      CD::Logger::get().print("log", name, color_id, "Process with PID {} finished successfully.", pid);
       return true;
     } else {
-      CD::Logger::get().print(name,  "Process with PID {} exited with error code: {}", pid, exit_code);
+      CD::Logger::get().print("log", name,  "Process with PID {} exited with error code: {}", pid, exit_code);
       return false;
     };
   } 
   else if (WIFSIGNALED(status)) {
     int signal_number = WTERMSIG(status);
-    CD::Logger::get().print(name,  "Process with PID {} was killed by signal: {}", pid, signal_number);
+    CD::Logger::get().print("log", name,  "Process with PID {} was killed by signal: {}", pid, signal_number);
     return false;
   };
 
@@ -346,14 +346,14 @@ void CD::Service::cloneRepo(size_t version){
   if (!std::filesystem::exists(target_dir)) {
     std::error_code ec;
     if (std::filesystem::create_directories(target_dir, ec)) 
-      CD::Logger::get().print(name, color_id, "Created missing service directory: {}", target_dir.string());
+      CD::Logger::get().print("log", name, color_id, "Created missing service directory: {}", target_dir.string());
     else {
-      CD::Logger::get().print(name, color_id, "Failed to create directory {} : {}", target_dir.string(), ec.message());
+      CD::Logger::get().print("log", name, color_id, "Failed to create directory {} : {}", target_dir.string(), ec.message());
       return;
     };
   }
   else {
-    CD::Logger::get().print(name, color_id, "Directory {} alredy exists", target_dir.string());
+    CD::Logger::get().print("log", name, color_id, "Directory {} alredy exists", target_dir.string());
     return;
   };
 
@@ -375,7 +375,7 @@ void CD::Service::removeDir(size_t version){
   std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
 
   if (!std::filesystem::exists(target_dir)) {
-    CD::Logger::get().print(name, color_id, "Directory does not exist, nothing to remove: {}", target_dir.string());
+    CD::Logger::get().print("log", name, color_id, "Directory does not exist, nothing to remove: {}", target_dir.string());
     return;
   };
 
@@ -383,9 +383,9 @@ void CD::Service::removeDir(size_t version){
   uintmax_t removed_count = std::filesystem::remove_all(target_dir, ec);
 
   if (ec)
-    CD::Logger::get().print(name,  "Failed to remove directory {} : {}", target_dir.string(), ec.message());
+    CD::Logger::get().print("log", name,  "Failed to remove directory {} : {}", target_dir.string(), ec.message());
   else {
-    CD::Logger::get().print(name, color_id, "Successfully removed directory: {} (deleted {} items)", target_dir.string(), removed_count);
+    CD::Logger::get().print("log", name, color_id, "Successfully removed directory: {} (deleted {} items)", target_dir.string(), removed_count);
   };
 };
 
@@ -396,12 +396,12 @@ bool CD::Service::runTests(size_t version){
   std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
-    CD::Logger::get().print(name,  "Directory {} didn't exists", target_dir.string());
+    CD::Logger::get().print("log", name,  "Directory {} didn't exists", target_dir.string());
     return false;
   };
 
   std::string full_command = "cd " + target_dir.string() + " && " + test_cmd;
-  CD::Logger::get().print(name, color_id, "Running tests in version {}: {}", version, full_command);
+  CD::Logger::get().print("log", name, color_id, "Running tests in version {}: {}", version, full_command);
   return executeProcess({"/bin/sh", "-c", full_command});
 };
 
@@ -413,7 +413,7 @@ bool CD::Service::runContainer(size_t version) {
   std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
-    CD::Logger::get().print(name,  "Directory {} didn't exists", target_dir.string());
+    CD::Logger::get().print("log", name,  "Directory {} didn't exists", target_dir.string());
     return false;
   };
 
@@ -426,7 +426,7 @@ bool CD::Service::runContainer(size_t version) {
     modified_docker_cmd.insert(pos + target_prefix.length(), " --env-file " + env_path.string());
 
   std::string full_command = "cd " + target_dir.string() + " && " + modified_docker_cmd;
-  CD::Logger::get().print(name, color_id, "Running docker container in version {}: {}", version, full_command); 
+  CD::Logger::get().print("log", name, color_id, "Running docker container in version {}: {}", version, full_command); 
   return executeProcess({"/bin/sh", "-c", full_command});
 };
 
@@ -438,7 +438,7 @@ bool CD::Service::statusContainer(size_t version){
   std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
-    CD::Logger::get().print(name,  "Directory {} didn't exist", target_dir.string());
+    CD::Logger::get().print("log", name,  "Directory {} didn't exist", target_dir.string());
     return false;
   };
 
@@ -454,7 +454,7 @@ bool CD::Service::statusContainer(size_t version){
   }
 
   std::string full_command = "cd " + target_dir.string() + " && " + modified_docker_cmd;
-  CD::Logger::get().print(name, color_id, "Checking container status in version {}: {}", version, full_command); 
+  CD::Logger::get().print("log", name, color_id, "Checking container status in version {}: {}", version, full_command); 
   return executeProcess({"/bin/sh", "-c", full_command});
 };
 
@@ -466,7 +466,7 @@ bool CD::Service::stopContainer(size_t version){
   std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
   
   if (!std::filesystem::exists(target_dir)) {
-    CD::Logger::get().print(name,  "Directory {} didn't exists", target_dir.string());
+    CD::Logger::get().print("log", name,  "Directory {} didn't exists", target_dir.string());
     return false;
   };
 
@@ -479,7 +479,7 @@ bool CD::Service::stopContainer(size_t version){
     modified_docker_cmd.insert(pos + target_prefix.length(), " --env-file " + env_path.string());
 
   std::string full_command = "cd " + target_dir.string() + " && " + modified_docker_cmd;
-  CD::Logger::get().print(name, color_id, "Running docker container in version {}: {}", version, full_command); 
+  CD::Logger::get().print("log", name, color_id, "Running docker container in version {}: {}", version, full_command); 
   return executeProcess({"/bin/sh", "-c", full_command});
 };
 
@@ -495,27 +495,27 @@ std::string CD::Service::getRemoteCommit(){
   };
 
   std::string command = "git ls-remote " + authenticated_url + " " + branch;
-  CD::Logger::get().print(name, color_id, "Checking remote commit for branch '{}'...", branch);
+  CD::Logger::get().print("log", name, color_id, "Checking remote commit for branch '{}'...", branch);
   std::array<char, 128> buffer;
   std::string result;
   
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
   if (!pipe) {
-    CD::Logger::get().print(name,  "Failed to run git ls-remote command.");
+    CD::Logger::get().print("log", name,  "Failed to run git ls-remote command.");
     return "";
   };
 
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) result += buffer.data();
 
   if (result.empty()) {
-    CD::Logger::get().print(name,  "Remote branch '{}' not found or failed to fetch.", branch);
+    CD::Logger::get().print("log", name,  "Remote branch '{}' not found or failed to fetch.", branch);
     return "";
   };
 
   size_t space_pos = result.find_first_of(" \t");
   if (space_pos != std::string::npos) {
     std::string commit_hash = result.substr(0, space_pos);
-    CD::Logger::get().print(name, color_id, "Latest remote commit for {}: {}", branch, commit_hash);
+    CD::Logger::get().print("log", name, color_id, "Latest remote commit for {}: {}", branch, commit_hash);
     return commit_hash;
   };
 
@@ -529,12 +529,12 @@ std::string CD::Service::getLocalCommit(size_t version) {
   std::filesystem::path target_dir = local_path / CD::Config::SERVICE_REPOS_DIR_PATH / std::filesystem::path(std::to_string(version) + "/");
 
   if (!std::filesystem::exists(target_dir)) {
-    CD::Logger::get().print(name,  "Directory {} doesn't exist", target_dir.string());
+    CD::Logger::get().print("log", name,  "Directory {} doesn't exist", target_dir.string());
     return "";
   };
 
   if (!std::filesystem::exists(target_dir / ".git")) {
-    CD::Logger::get().print(name,  "Directory {} is not a git repository", target_dir.string());
+    CD::Logger::get().print("log", name,  "Directory {} is not a git repository", target_dir.string());
     return "";
   };
 
@@ -545,7 +545,7 @@ std::string CD::Service::getLocalCommit(size_t version) {
 
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
   if (!pipe) {
-    CD::Logger::get().print(name,  "Failed to run git rev-parse command.");
+    CD::Logger::get().print("log", name,  "Failed to run git rev-parse command.");
     return "";
   };
 
@@ -554,11 +554,11 @@ std::string CD::Service::getLocalCommit(size_t version) {
   if (!result.empty()) result.erase(result.find_last_not_of(" \n\r\t") + 1);
 
   if (result.empty()) {
-    CD::Logger::get().print(name,  "Failed to retrieve local commit for version {}", version);
+    CD::Logger::get().print("log", name,  "Failed to retrieve local commit for version {}", version);
     return "";
   };
 
-  CD::Logger::get().print(name, color_id, "Local commit for version {}: {}", version, result);
+  CD::Logger::get().print("log", name, color_id, "Local commit for version {}: {}", version, result);
   return result;
 };
 
@@ -584,7 +584,7 @@ void CD::Service::findLatestVersions() {
 
   latest_version = latest;
 
-  CD::Logger::get().print(name, color_id, "Latest Version found: {}", latest);
+  CD::Logger::get().print("log", name, color_id, "Latest Version found: {}", latest);
 };
 
 
@@ -593,7 +593,7 @@ void CD::Service::observeFile(){
   if(config_path == "") return;
   std::filesystem::file_time_type new_last_time_write = std::filesystem::last_write_time(config_path);
   if(new_last_time_write == last_time_write) return;
-  CD::Logger::get().print(name, color_id, "Detected {} file change", config_path.string());
+  CD::Logger::get().print("log", name, color_id, "Detected {} file change", config_path.string());
   parseServiceFile(config_path);
   local_latest_commit = "";
   last_time_write = new_last_time_write;
@@ -616,7 +616,7 @@ void CD::Service::trimeFolders() {
         size_t version = std::stoull(folder_name);
                 
         if (version + n < latest_version) {
-          CD::Logger::get().print(name, color_id, "Trimming old version folder: {}", entry.path().string());
+          CD::Logger::get().print("log", name, color_id, "Trimming old version folder: {}", entry.path().string());
           std::filesystem::remove_all(entry.path());
         };
       } catch (const std::exception& e) {};

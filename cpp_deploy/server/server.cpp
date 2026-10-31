@@ -13,14 +13,14 @@
 CD::Server::Server(std::atomic<size_t>& update_request_count)
   : update_request_count(update_request_count), 
     acceptor(io_context) {
-  CD::Logger::get().print(CD::LS::ServerBold, "=== Default Param Constructor Called ===");
+  CD::Logger::get().print("log", CD::LS::ServerBold, "=== Default Param Constructor Called ===");
   onStart();
 };
 
 
 
 CD::Server::~Server() {
-  CD::Logger::get().print(CD::LS::ServerBold, "=== Destructor Called ===");
+  CD::Logger::get().print("log", CD::LS::ServerBold, "=== Destructor Called ===");
   onEnd();
 };
 
@@ -29,24 +29,24 @@ CD::Server::~Server() {
 // === Operations
 void CD::Server::onStart() {
   is_running = true;
-  CD::Logger::get().print(CD::LS::Server, "onStart Called");
+  CD::Logger::get().print("log", CD::LS::Server, "onStart Called");
   if (!server_thread.joinable()) {
     server_thread = std::thread([this](){ runServer(); });
-    CD::Logger::get().print(CD::LS::Server, "server_handler started successfully");
-  } else CD::Logger::get().print(CD::LS::Server, "server_handler is already running");
+    CD::Logger::get().print("log", CD::LS::Server, "server_handler started successfully");
+  } else CD::Logger::get().print("log", CD::LS::Server, "server_handler is already running");
 };
 
 
 
 void CD::Server::onEnd() {
-  CD::Logger::get().print(CD::LS::Server, "onEnd Called");
+  CD::Logger::get().print("log", CD::LS::Server, "onEnd Called");
   
   is_running = true;
   
   boost::system::error_code ec;
   acceptor.close(ec);
-  if (ec) CD::Logger::get().print(CD::LS::ServerError, "Error closing acceptor: {}", ec.message());
-  else CD::Logger::get().print(CD::LS::Server, "Acceptor closed successfully");
+  if (ec) CD::Logger::get().print("log", CD::LS::ServerError, "Error closing acceptor: {}", ec.message());
+  else CD::Logger::get().print("log", CD::LS::Server, "Acceptor closed successfully");
   
   try {
     boost::asio::ip::tcp::socket wakeup_socket(io_context);
@@ -56,25 +56,25 @@ void CD::Server::onEnd() {
   } catch (...) {};
   
   if(!io_context.stopped()) io_context.stop();
-  if(io_context.stopped()) CD::Logger::get().print(CD::LS::Server, "io_context stopped");
-  else CD::Logger::get().print(CD::LS::ServerError, "io_context is still working"); 
+  if(io_context.stopped()) CD::Logger::get().print("log", CD::LS::Server, "io_context stopped");
+  else CD::Logger::get().print("log", CD::LS::ServerError, "io_context is still working"); 
 
   if (server_thread.joinable()) server_thread.join();
-  if(!server_thread.joinable()) CD::Logger::get().print(CD::LS::Server, "server_thread stopped");
-  else CD::Logger::get().print(CD::LS::ServerError, "server_thread is still working"); 
+  if(!server_thread.joinable()) CD::Logger::get().print("log", CD::LS::Server, "server_thread stopped");
+  else CD::Logger::get().print("log", CD::LS::ServerError, "server_thread is still working"); 
 
   std::lock_guard<std::mutex> lock(threads_mutex);
   for (auto& el : worker_threads) if (el.joinable()) el.join();
   worker_threads.clear();
-  if(worker_threads.empty()) CD::Logger::get().print(CD::LS::Server, "worker_threads cleaned");
-  else CD::Logger::get().print(CD::LS::ServerError, "worker_threads still in use"); 
+  if(worker_threads.empty()) CD::Logger::get().print("log", CD::LS::Server, "worker_threads cleaned");
+  else CD::Logger::get().print("log", CD::LS::ServerError, "worker_threads still in use"); 
 };
 
 
 
 // === Helpers
 void CD::Server::runServer() {
-  CD::Logger::get().print(CD::LS::ServerThread, "runServer Called");
+  CD::Logger::get().print("log", CD::LS::ServerThread, "runServer Called");
   
   try {
     acceptor.open(boost::asio::ip::tcp::v4());
@@ -82,7 +82,7 @@ void CD::Server::runServer() {
     acceptor.bind(boost::asio::ip::tcp::endpoint(CD::Config::ADDRESS, CD::Config::PORT));
     acceptor.listen();
     
-    CD::Logger::get().print(CD::LS::ServerThread, "Listening on http://{}:{}...", acceptor.local_endpoint().address().to_string(), acceptor.local_endpoint().port());
+    CD::Logger::get().print("log", CD::LS::ServerThread, "Listening on http://{}:{}...", acceptor.local_endpoint().address().to_string(), acceptor.local_endpoint().port());
 
     while (is_running) {
       boost::asio::ip::tcp::socket socket(io_context);
@@ -90,7 +90,7 @@ void CD::Server::runServer() {
       
       acceptor.accept(socket, ec);
       if (ec || !is_running) break;
-      else CD::Logger::get().print(CD::LS::ServerThread, "Registered Client Call");
+      else CD::Logger::get().print("log", CD::LS::ServerThread, "Registered Client Call");
 
       {
         std::lock_guard<std::mutex> lock(threads_mutex);
@@ -108,31 +108,31 @@ void CD::Server::runServer() {
       }
     };
   } catch (std::exception& e) {
-    CD::Logger::get().print(CD::LS::ServerThreadError, "Fatal Error: {}", e.what());
+    CD::Logger::get().print("log", CD::LS::ServerThreadError, "Fatal Error: {}", e.what());
   };
 
   boost::system::error_code ec;
   acceptor.close(ec);
-  if (ec) CD::Logger::get().print(CD::LS::ServerThreadError, "Error closing acceptor: {}", ec.message()); 
-  else CD::Logger::get().print(CD::LS::ServerThread, "Acceptor closed successfully");
+  if (ec) CD::Logger::get().print("log", CD::LS::ServerThreadError, "Error closing acceptor: {}", ec.message()); 
+  else CD::Logger::get().print("log", CD::LS::ServerThread, "Acceptor closed successfully");
 
-  CD::Logger::get().print(CD::LS::ServerThread, "runServer Ended");
+  CD::Logger::get().print("log", CD::LS::ServerThread, "runServer Ended");
 };
 
 
 
 void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
-  CD::Logger::get().print(CD::LS::ServerClientHandler, "handleClient Called");
+  CD::Logger::get().print("log", CD::LS::ServerClientHandler, "handleClient Called");
   
   try {
     boost::system::error_code endpoint_ec;
     boost::asio::ip::tcp::endpoint remote_endpoint = socket.remote_endpoint(endpoint_ec);
     boost::asio::ip::address client_ip = endpoint_ec ? boost::asio::ip::address() : remote_endpoint.address();
     
-    if(!endpoint_ec && client_ip.is_loopback()) CD::Logger::get().print(CD::LS::ServerClientHandler, "Called from IP: {}", client_ip.to_string());
+    if(!endpoint_ec && client_ip.is_loopback()) CD::Logger::get().print("log", CD::LS::ServerClientHandler, "Called from IP: {}", client_ip.to_string());
     else {
       std::string ip_str = endpoint_ec ? "unknown" : client_ip.to_string();
-      CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Called from IP: {} ! Rejecting !", ip_str); 
+      CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "Called from IP: {} ! Rejecting !", ip_str); 
       sendRespond(CD::SR::Forbidden, socket);
       return;
     };
@@ -143,17 +143,17 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
     std::string method, uri, version;
     
     if (!(request_stream >> method >> uri >> version)) {
-      CD::Logger::get().print(CD::LS::ServerClientHandlerError, "failed to parse http request line");
+      CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "failed to parse http request line");
       std::string ip_str = endpoint_ec ? "unknown" : client_ip.to_string();
-      CD::Logger::get().print(CD::LS::ServerClientHandlerError, "called from ip: {} ! rejecting !", ip_str); 
+      CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "called from ip: {} ! rejecting !", ip_str); 
       sendRespond(CD::SR::Forbidden, socket);
       return;
     };
     
     if (uri.length() > CD::Config::MAX_URI_SIZE) {
-      CD::Logger::get().print(CD::LS::ServerClientHandlerError, "uri too long");
+      CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "uri too long");
       std::string ip_str = endpoint_ec ? "unknown" : client_ip.to_string();
-      CD::Logger::get().print(CD::LS::ServerClientHandlerError, "called from ip: {} ! rejecting !", ip_str); 
+      CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "called from ip: {} ! rejecting !", ip_str); 
       sendRespond(CD::SR::Forbidden, socket);
       return;
     };
@@ -166,16 +166,16 @@ void CD::Server::handleClient(boost::asio::ip::tcp::socket& socket) {
     if (fetched_body.first) return;
     std::string body = fetched_body.second;
 
-    CD::Logger::get().print(CD::LS::ServerClientHandler, "Method: {} | URI: {}", method, uri);
-    CD::Logger::get().print(CD::LS::ServerClientHandler, "Payload Body: {}", body);
+    CD::Logger::get().print("log", CD::LS::ServerClientHandler, "Method: {} | URI: {}", method, uri);
+    CD::Logger::get().print("log", CD::LS::ServerClientHandler, "Payload Body: {}", body);
 
     operateEndpoints(uri, method, socket);
 
   } catch (std::exception& e) {
-    CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Fatal Error: {}", e.what());
+    CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "Fatal Error: {}", e.what());
   };
 
-  CD::Logger::get().print(CD::LS::ServerClientHandler, "handleClient Ended");
+  CD::Logger::get().print("log", CD::LS::ServerClientHandler, "handleClient Ended");
 };
 
 
@@ -191,7 +191,7 @@ std::pair<int, size_t> CD::Server::fetchContentSize(std::istream& request_stream
       try {
         content_length = std::stoul(match[1].str());
       } catch (...) {
-        CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Content-Length numeric overflow");
+        CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "Content-Length numeric overflow");
         sendRespond(CD::SR::Bad_Request, socket);
         return {-1, 0};
       };
@@ -201,7 +201,7 @@ std::pair<int, size_t> CD::Server::fetchContentSize(std::istream& request_stream
   };
 
   if (content_length > CD::Config::CLIENT_MAX_BODY_SIZE) {
-    CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Payload too large: {} bytes (Limit: {})", content_length, CD::Config::CLIENT_MAX_BODY_SIZE);      
+    CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "Payload too large: {} bytes (Limit: {})", content_length, CD::Config::CLIENT_MAX_BODY_SIZE);      
     sendRespond(CD::SR::Payload_To_Large, socket);
     return {-1, 0};
   };
@@ -227,7 +227,7 @@ std::pair<int, std::string> CD::Server::fetchBody(size_t content_length, std::is
       boost::asio::read(socket, boost::asio::buffer(temp_buffer), read_ec);
       
       if (read_ec) {
-        CD::Logger::get().print(CD::LS::ServerClientHandlerError, "Socket read error while fetching body: {}", read_ec.message());
+        CD::Logger::get().print("log", CD::LS::ServerClientHandlerError, "Socket read error while fetching body: {}", read_ec.message());
         boost::system::error_code write_ec;
         sendRespond(CD::SR::Bad_Request, socket, &write_ec);
         return {-1, ""};
@@ -249,7 +249,7 @@ void CD::Server::sendRespond(const std::string& code, const std::string& type, c
   if(err != nullptr) boost::asio::write(socket, boost::asio::buffer(respond), *err);
   else boost::asio::write(socket, boost::asio::buffer(respond));
   
-  CD::Logger::get().print(CD::LS::ServerClientHandler, "respond: {}", respond);
+  CD::Logger::get().print("log", CD::LS::ServerClientHandler, "respond: {}", respond);
 };
 
 
@@ -262,7 +262,7 @@ void CD::Server::sendRespond(CD::ShortRespond respond, boost::asio::ip::tcp::soc
 
 // === Endpoint
 void CD::Server::operateEndpoints(const std::string& uri, const std::string& method, boost::asio::ip::tcp::socket& socket) {
-  CD::Logger::get().print(CD::LS::ServerClientHandler, "operate endpoint: {} - {}", uri, method);
+  CD::Logger::get().print("log", CD::LS::ServerClientHandler, "operate endpoint: {} - {}", uri, method);
   
   if (uri == "/api/update" && method == "POST") updateEndpoint(socket);
   else sendRespond(CD::SR::Bad_Request, socket);
@@ -271,7 +271,7 @@ void CD::Server::operateEndpoints(const std::string& uri, const std::string& met
 
 
 void CD::Server::updateEndpoint(boost::asio::ip::tcp::socket& socket){
-  CD::Logger::get().print(CD::LS::ServerClientHandler, "API Triggered adding update request");
+  CD::Logger::get().print("log", CD::LS::ServerClientHandler, "API Triggered adding update request");
   update_request_count++;
   std::string respond = "Connection: Close\r\n\r\n\"{status\":\"success\",\"message\":\"added update request\"}";
   sendRespond(CD::RC::Ok, CD::CT::Json, respond, socket); 

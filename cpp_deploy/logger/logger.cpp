@@ -30,3 +30,16 @@ size_t CD::Logger::getServiceColor(){
   return id;
 };
 
+
+
+std::vector<CD::LogItem> CD::Logger::getWindowBuffer(const std::string& log_window_name) {
+  std::lock_guard<std::mutex> lock(log_mutex);
+    
+  auto it = log_windows_buffers.find(log_window_name);
+  if (it != log_windows_buffers.end()) {
+    std::vector<CD::LogItem> logs = std::move(it->second);
+    return logs;
+  };
+    
+  return {};
+};

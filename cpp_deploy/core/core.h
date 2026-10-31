@@ -11,6 +11,9 @@
 #include <string>
 #include <fstream>
 #include <regex>
+#include <unistd.h>
+#include <poll.h>
+#include <termios.h>
 
 #include <fmt/base.h>
 #include <fmt/color.h>
@@ -32,6 +35,9 @@ private:
   std::filesystem::file_time_type last_time_write = {};
   std::atomic<size_t> update_request_count = 1;
   CD::Server server;
+  std::atomic<bool>& g_running;
+  std::thread render_thread;
+  termios old_termios{};
 
 
 
@@ -40,7 +46,7 @@ private:
 // =========================== //
 // === Constructors
 public:
-  Core();
+  Core(std::atomic<bool>& g_running);
   ~Core();
   Core(const Core& second) = delete;
   Core& operator=(const Core& second) = delete;
@@ -60,6 +66,10 @@ private:
   void parseServiceFile(const std::filesystem::path& path);
   void loadServices();
   void removeServices();
+
+// === Windows
+  void renderWindow();
+  void commands(const std::string& input_buffer);
 
 };
 };

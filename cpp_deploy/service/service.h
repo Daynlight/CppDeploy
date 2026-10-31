@@ -72,10 +72,10 @@ public:
 public:
   void loadFromFile(const std::string& config);
   void parseServiceFile(const std::filesystem::path& path);
+  void printInfo();
 
 // === Helpers
 private:
-  void printInfo();
   
   pid_t spawnProcess(const std::vector<std::string>& args);
   bool waitForProcess(pid_t pid);

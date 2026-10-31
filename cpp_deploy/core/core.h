@@ -10,7 +10,6 @@
 #include <filesystem>
 #include <string>
 #include <fstream>
-#include <iterator>
 #include <regex>
 
 #include <fmt/base.h>
@@ -18,18 +17,23 @@
 
 #include "../service/service.h"
 #include "../logger/logger.h"
+#include "../server/server.h"
 #include "../config.h"
 
 
 
-namespace CD{
-class Core{
+namespace CD {
+class Core {
 // =========================== //
 // === Data ================== //
 // =========================== //
 private:
   std::unordered_map<std::filesystem::path, CD::Service> services;
   std::filesystem::file_time_type last_time_write = {};
+  std::atomic<size_t> update_request_count = 1;
+  CD::Server server;
+
+
 
 // =========================== //
 // === Functional ============ //
@@ -38,13 +42,14 @@ private:
 public:
   Core();
   ~Core();
-  Core(const Core& second);
-  Core& operator=(const Core& second);
-  Core(Core&& second);
-  Core& operator=(Core&& second);
+  Core(const Core& second) = delete;
+  Core& operator=(const Core& second) = delete;
+  Core(Core&& second) = delete;
+  Core& operator=(Core&& second) = delete;
   
 // === Loop
 public:
+  void loop();
   void onStart();
   void onUpdate();
   void onHealthCheck();

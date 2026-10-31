@@ -6,7 +6,6 @@
 
 
 #pragma once
-#include <queue>
 #include <mutex>
 #include <array>
 #include <string>
@@ -28,6 +27,8 @@ struct LSD {
   fmt::text_style style;
 };
 
+
+
 namespace LSC {
   inline constexpr fmt::text_style Main =           fg(fmt::color::deep_pink);
   inline constexpr fmt::text_style Core =           fg(fmt::color::deep_sky_blue);
@@ -47,6 +48,8 @@ namespace LSC {
                                                     fg(fmt::color::rebecca_purple)
                                                   };
 };
+
+
 
 namespace LST {
   inline constexpr const char* SignalHandler        = "Signal Handler";
@@ -87,6 +90,8 @@ private:
   std::mutex log_mutex;
   std::array<int, 11> service_color_usage = {};
 
+
+
 // =========================== //
 // === Functional ============ //
 // =========================== //
@@ -113,6 +118,7 @@ public:
   void print(const std::string& service_name, int color_id, std::string_view fmt_str, T&&... args);
   template <typename... T>
   void print(const std::string& service_name, std::string_view fmt_str, T&&... args);
+
 };
 };
 
